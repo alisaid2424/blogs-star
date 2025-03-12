@@ -1,0 +1,20 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+@layer components{
+    .navLinks a {
+        @apply cursor-pointer text-base font-semibold hover:text-violet-600 transition-all duration-300;
+    }
+
+}
+
+@layer utilities {
+  @media (max-width: 767px) {
+    .navLinksWraper {
+      @apply absolute left-0 top-full w-full bg-gray-100 border-b-2 border-gray-300 transition-all duration-300;
+      clip-path: polygon(0 0, 100% 0, 100% 0, 0 0);
+    }
+  }
+}
