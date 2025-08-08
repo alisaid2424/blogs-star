@@ -11,7 +11,7 @@ const BlogItemPage = async ({ params }) => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
-      <h1 className="text-3xl text-violet-600 font-semibold text-center mb-6 ">
+      <h1 className="text-4xl text-violet-600 font-semibold text-center mb-7 uppercase italic">
         Blog Details
       </h1>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">

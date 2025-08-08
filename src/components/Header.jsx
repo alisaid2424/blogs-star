@@ -1,14 +1,89 @@
 "use client";
+
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { useState } from "react";
-import { IoMenu } from "react-icons/io5";
-import { IoCloseSharp } from "react-icons/io5";
+import { gsap } from "gsap";
+import { useGSAP } from "@gsap/react";
+
+const navLinks = [
+  { name: "Home", href: "/" },
+  { name: "About", href: "/about" },
+  { name: "Blogs", href: "/blogs" },
+  { name: "Contact us", href: "/contact" },
+];
 
 const Header = () => {
-  const [toggle, setToggle] = useState(false);
+  const menuRef = useRef(null);
+  const overlayRef = useRef(null);
+  const itemsRef = useRef([]);
+  itemsRef.current = [];
+
+  const tl = useRef();
+  const [isOpen, setIsOpen] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
+
+  // Animate menu with GSAP
+  useGSAP(
+    () => {
+      // Initial state
+      gsap.set(overlayRef.current, {
+        clipPath: "polygon(0% 0%, 100% 0%, 100% 0%, 0% 0%)",
+      });
+
+      gsap.set(itemsRef.current, { y: 600, opacity: 0 });
+
+      // Timeline
+      tl.current = gsap
+        .timeline({ paused: true })
+        .to(overlayRef.current, {
+          duration: 2.85,
+          clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)",
+          ease: "power4.inOut",
+        })
+        .to(
+          itemsRef.current,
+          {
+            y: 0,
+            opacity: 1,
+            duration: 1.2,
+            stagger: 0.1,
+            ease: "power4.inOut",
+          },
+          "-=1.5"
+        );
+    },
+    { scope: menuRef }
+  );
+
+  // Play or reverse animation on menu toggle
+  useEffect(() => {
+    if (tl.current) {
+      if (isOpen) {
+        tl.current.play();
+      } else {
+        tl.current.reverse(0);
+      }
+    }
+  }, [isOpen]);
+
+  const toggleMenu = () => {
+    if (isAnimating) return;
+
+    setIsOpen((prev) => !prev);
+    setIsAnimating(true);
+
+    setTimeout(() => {
+      setIsAnimating(false);
+    }, 1500);
+  };
+
   return (
-    <nav className="bg-gray-100 text-gray-800">
-      <div className="container  flex items-center justify-between h-16 mx-auto relative z-50">
+    <nav className="bg-gray-100 text-gray-800 shadow-md">
+      <div
+        className="container mx-auto px-4 flex items-center justify-between h-16 relative z-30"
+        ref={menuRef}
+      >
+        {/* Logo */}
         <Link href="/">
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -21,34 +96,101 @@ const Header = () => {
           </svg>
         </Link>
 
+        {/* Hamburger Button (Mobile) */}
+        {!isOpen && !isAnimating && (
+          <button
+            className="md:hidden text-violet-600 z-50"
+            onClick={toggleMenu}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="w-8 h-8"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 6h16M4 12h16M4 18h16"
+              />
+            </svg>
+          </button>
+        )}
+
+        {/* Desktop Links */}
+        <ul className="hidden md:flex gap-8 items-center">
+          {navLinks.map((link) => (
+            <li key={link.href}>
+              <Link
+                href={link.href}
+                className="text-gray-700 hover:text-violet-600 font-bold"
+              >
+                {link.name}
+              </Link>
+            </li>
+          ))}
+          {/* Account Icon */}
+          <li>
+            <Link href="/account">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="w-7 h-7 border-2 border-violet-600 rounded-full  text-violet-600"
+                fill="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zM12 14c-4 0-6 2-6 6h12c0-4-2-6-6-6z" />
+              </svg>
+            </Link>
+          </li>
+        </ul>
+
+        {/* Mobile Overlay Menu */}
         <div
-          className="navLinksWraper"
+          ref={overlayRef}
+          className={`fixed inset-0 w-full h-screen bg-violet-600 z-50 md:hidden  overflow-hidden px-6 pt-6`}
           style={{
-            clipPath: toggle ? "polygon(0 0, 100% 0, 100% 100%, 0 100%)" : "",
+            clipPath: isOpen
+              ? "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)"
+              : "polygon(0% 0%, 100% 0%, 100% 0%, 0% 0%)",
           }}
         >
-          <ul className="navLinks relative z-50 flex items-start md:items-center flex-col md:flex-row ps-4 md:ps-0 pb-3 md:pb-0 gap-3 lg:gap-8">
-            <Link onClick={() => setToggle(false)} href="/">
-              Home
-            </Link>
-            <Link onClick={() => setToggle(false)} href="/about">
-              About
-            </Link>
-            <Link onClick={() => setToggle(false)} href="/blogs">
-              Blogs
-            </Link>
-            <Link onClick={() => setToggle(false)} href="/contact">
-              Contact us
-            </Link>
-          </ul>
-        </div>
+          {/* Close Button inside the menu */}
+          <div className="flex justify-end mb-8">
+            {isOpen && !isAnimating && (
+              <button onClick={toggleMenu} className="text-white">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="w-8 h-8"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            )}
+          </div>
 
-        <div className="text-5xl cursor-pointer text-violet-600 md:hidden">
-          {toggle ? (
-            <IoCloseSharp onClick={() => setToggle((prev) => !prev)} />
-          ) : (
-            <IoMenu onClick={() => setToggle((prev) => !prev)} />
-          )}
+          <ul className="flex flex-col gap-14">
+            {navLinks.map((link, index) => (
+              <li key={link.href} ref={(el) => (itemsRef.current[index] = el)}>
+                <Link
+                  href={link.href}
+                  onClick={toggleMenu}
+                  className="text-white text-xl font-bold"
+                >
+                  {link.name}
+                </Link>
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
     </nav>
